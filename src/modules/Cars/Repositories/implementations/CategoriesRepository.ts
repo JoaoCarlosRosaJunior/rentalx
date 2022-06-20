@@ -1,43 +1,38 @@
-import { Category } from '../../model/Category'
-import { ICategoriesRepository, ICreateCategoryDTO } from '../ICategoriesRepository';
+import { getRepository, Repository } from "typeorm";
+import { Category } from "../../entities/Category";
+import {
+  ICategoriesRepository,
+  ICreateCategoryDTO,
+} from "../ICategoriesRepository";
 
 class CategoriesRepository implements ICategoriesRepository {
-    private categories : Category[];
+  private repository: Repository<Category>;
 
-    private static INSTANCE: CategoriesRepository;
+  constructor() {
+    this.repository = getRepository(Category);
+  }
 
-    private constructor() {
-        this.categories = [];
-    }
+  async create({ name, description }: ICreateCategoryDTO): Promise<void> {
+    const category = this.repository.create({
+      name,
+      description,
+    });
 
-    public static getInstance(): CategoriesRepository {
-        if ( !CategoriesRepository.INSTANCE ) {
-            CategoriesRepository.INSTANCE = new CategoriesRepository();
-        };
-        return CategoriesRepository.INSTANCE;
-    }
+    await this.repository.save(category);
+  }
 
-    create ( {name, description}: ICreateCategoryDTO ): void {
-        const category = new Category;
+  async list(): Promise<Category[]> {
+    const categories = await this.repository.find();
+    return categories;
+  }
 
-        Object.assign( category, {
-            name,
-            description,
-            created_at: new Date,
-        });
+  async findByName(name: string): Promise<Category> {
+    const category = await this.repository.findOne({ name });
 
-        this.categories.push( category );
-    };
+    console.log(category);
 
-    list(): Category[] {
-        return this.categories;
-    };
+    return category;
+  }
+}
 
-    findByName( name: string ): Category {
-        const category = this.categories.find( category => category.name === name );
-
-        return category
-    }
-};
-
-export { CategoriesRepository }
+export { CategoriesRepository };
